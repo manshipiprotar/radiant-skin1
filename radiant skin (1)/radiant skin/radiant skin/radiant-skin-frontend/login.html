@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login or Register | Radiant Skin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  
+
+<div id="rs-navbar"></div>
+
+<section class="container auth-wrap">
+  <div class="row g-4 align-items-center w-100">
+    <div class="col-lg-6 d-none d-lg-block">
+      <div class="auth-visual" id="authVisual" style="position:relative; overflow:hidden; background-size:cover; background-position:center;">
+        <div class="auth-visual-overlay" style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(30,20,22,.15) 0%, rgba(30,20,22,.55) 100%); z-index:1;"></div>
+        <div style="position:relative; z-index:2;">
+          <h2 class="display-6" id="authVisualTitle" style="max-width:380px; color:#fff;">Welcome back to your <span class="italic-accent" style="color:#F3D9DC;">ritual</span>.</h2>
+          <p id="authVisualText" style="color:rgba(255,255,255,.88);">Log in to pick up right where your skincare journey left off.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6">
+      <div class="auth-card mx-auto" style="max-width:440px;">
+        <div id="rsPendingNotice" class="alert border-0 mb-3" style="background:var(--blush); display:none;">
+          <i class="bi bi-info-circle me-1"></i> Please login or create an account to continue adding items to your cart.
+        </div>
+
+        <span class="eyebrow">The Ritual of Care</span>
+
+        <ul class="nav nav-pills auth-tabs mb-4 mt-2" id="authTabs">
+          <li class="nav-item flex-fill">
+            <button class="nav-link w-100" id="tabBtnLogin" type="button" data-tab="login">Login</button>
+          </li>
+          <li class="nav-item flex-fill">
+            <button class="nav-link w-100" id="tabBtnRegister" type="button" data-tab="register">Register</button>
+          </li>
+        </ul>
+
+        <!-- ===== LOGIN FORM ===== -->
+        <div id="loginPane">
+          <h2 class="mt-1 mb-4">Welcome back</h2>
+          <form id="rsLoginForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-control" id="lEmail" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Password</label>
+              <input type="password" class="form-control" id="lPassword" required>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="lRemember">
+                <label class="form-check-label small text-muted" for="lRemember">Remember me</label>
+              </div>
+              <a href="forgot-password.html" class="small" style="color:var(--primary);">Forgot password?</a>
+            </div>
+            <button type="submit" class="btn-radiant btn w-100">Sign In</button>
+          </form>
+          <p class="text-center small text-muted mt-4">New to Radiant Skin? <a href="#" class="js-switch-tab" data-tab="register" style="color:var(--primary);">Create an account</a></p>
+        </div>
+
+        <!-- ===== REGISTER FORM ===== -->
+        <div id="registerPane" style="display:none;">
+          <h2 class="mt-1 mb-4">Create your account</h2>
+          <form id="rsRegisterForm" novalidate>
+            <div class="mb-3">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="rName" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-control" id="rEmail" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mobile Number</label>
+              <input type="tel" class="form-control" id="rPhone" placeholder="e.g. 9876543210">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">City</label>
+              <input type="text" class="form-control" id="rCity" placeholder="e.g. Rajkot">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Password</label>
+              <input type="password" class="form-control" id="rPassword" minlength="6" required>
+              <div class="form-text">At least 6 characters.</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" class="form-control" id="rConfirm" required>
+            </div>
+            <div class="form-check mb-4">
+              <input class="form-check-input" type="checkbox" id="rTerms" required>
+              <label class="form-check-label small text-muted" for="rTerms">I agree to the Terms & Privacy Policy</label>
+            </div>
+            <button type="submit" class="btn-radiant btn w-100">Create Account</button>
+          </form>
+          <p class="text-center small text-muted mt-4">Already have an account? <a href="#" class="js-switch-tab" data-tab="login" style="color:var(--primary);">Login</a></p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="rs-footer"></div>
+
+<style>
+  .auth-tabs { background: var(--cream-soft, #F7F1E7); border-radius: 999px; padding: 4px; }
+  .auth-tabs .nav-link { border-radius: 999px; color: var(--muted, #7A6064); font-weight: 500; text-align: center; border: none; background: transparent; }
+  .auth-tabs .nav-link.active { background: #fff; color: var(--primary); box-shadow: 0 4px 12px rgba(0,0,0,.06); }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/partials.js"></script>
+<script>
+  rsMountPartials("");
+  if(sessionStorage.getItem("rs_pending_action")){ document.getElementById('rsPendingNotice').style.display = 'block'; }
+
+  const visualCopy = {
+    login: { title: 'Welcome back to your <span class="italic-accent">ritual</span>.', text: 'Log in to pick up right where your skincare journey left off.', image: 'images/P069.jpg' },
+    register: { title: 'Embrace your natural <span class="italic-accent">luminosity</span>.', text: 'Create an account to save your wishlist, track orders and enjoy a faster checkout.', image: 'images/P070.jpg' }
+  };
+
+  function setTab(tab){
+    const isLogin = tab === 'login';
+    document.getElementById('loginPane').style.display = isLogin ? '' : 'none';
+    document.getElementById('registerPane').style.display = isLogin ? 'none' : '';
+    document.getElementById('tabBtnLogin').classList.toggle('active', isLogin);
+    document.getElementById('tabBtnRegister').classList.toggle('active', !isLogin);
+    document.getElementById('authVisualTitle').innerHTML = visualCopy[tab].title;
+    document.getElementById('authVisualText').textContent = visualCopy[tab].text;
+    document.getElementById('authVisual').style.backgroundImage = "url('" + visualCopy[tab].image + "')";
+    document.getElementById('authVisual').style.minHeight = isLogin ? '560px' : '780px';
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tab);
+    window.history.replaceState({}, '', url);
+  }
+
+  document.querySelectorAll('#authTabs button, .js-switch-tab').forEach(el => {
+    el.addEventListener('click', function(e){
+      e.preventDefault();
+      setTab(this.dataset.tab);
+    });
+  });
+
+  const initialTab = new URLSearchParams(window.location.search).get('tab') === 'register' ? 'register' : 'login';
+  setTab(initialTab);
+
+  document.getElementById('rsLoginForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const email = document.getElementById('lEmail').value.trim();
+    const password = document.getElementById('lPassword').value;
+
+    try {
+      const res = await fetch("http://localhost:8080/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email, password: password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        rsSet("rs_user", data.user || { name: email.split('@')[0], email: email });
+        rsToast("Logged in successfully ✓", "success");
+        setTimeout(()=>{
+          const redirect = sessionStorage.getItem("rs_redirect");
+          sessionStorage.removeItem("rs_redirect");
+          window.location.href = (redirect && redirect !== "login.html") ? redirect : "profile.html";
+        }, 600);
+        return;
+      }
+    } catch(err) {
+      console.warn("Backend API unavailable, attempting local authentication...", err);
+    }
+
+    if(rsLogin(email, password)){
+      rsToast("Logged in successfully ✓", "success");
+      setTimeout(()=>{
+        const redirect = sessionStorage.getItem("rs_redirect");
+        sessionStorage.removeItem("rs_redirect");
+        window.location.href = (redirect && redirect !== "login.html") ? redirect : "profile.html";
+      }, 600);
+    } else {
+      rsToast("Invalid email or password. Please register first.", "danger");
+    }
+  });
+
+  document.getElementById('rsRegisterForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const name = document.getElementById('rName').value.trim();
+    const email = document.getElementById('rEmail').value.trim();
+    const phone = document.getElementById('rPhone') ? document.getElementById('rPhone').value.trim() : "";
+    const city = document.getElementById('rCity') ? document.getElementById('rCity').value.trim() : "";
+    const password = document.getElementById('rPassword').value;
+    const confirm = document.getElementById('rConfirm').value;
+
+    if(password !== confirm){ rsToast("Passwords do not match.", "danger"); return; }
+
+    try {
+      const res = await fetch("http://localhost:8080/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name, email: email, phone: phone, city: city, password: password })
+      });
+      const data = await res.json();
+      if(!data.success) {
+        rsToast(data.message || "Registration failed.", "danger");
+        return;
+      }
+    } catch(err) {
+      console.warn("Backend API unavailable, saving to local storage...", err);
+    }
+
+    const users = rsGetUsers();
+    if(!users.some(u => u.email.toLowerCase() === email.toLowerCase())){
+      rsRegisterUser({ name, email, phone, city, password });
+    }
+    rsSet("rs_user", { name: name, email: email, phone: phone, city: city });
+    rsToast("Account created in MySQL Database! Welcome ✓", "success");
+
+    setTimeout(()=>{
+      const redirect = sessionStorage.getItem("rs_redirect");
+      sessionStorage.removeItem("rs_redirect");
+      window.location.href = (redirect && redirect !== "login.html") ? redirect : "profile.html";
+    }, 700);
+  });
+</script>
+</body>
+</html>

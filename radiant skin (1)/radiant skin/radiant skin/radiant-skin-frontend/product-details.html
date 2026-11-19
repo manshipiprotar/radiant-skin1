@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Product Details | Radiant Skin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="rs-navbar"></div>
+
+<section class="container pt-4" id="rsProductRoot"></section>
+
+<section class="rs-section" style="background:var(--cream-soft);">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">You May Also Like</span>
+      <h2 class="section-title mt-2">Complete the ritual</h2>
+    </div>
+    <div class="row g-4" id="rsRelatedProducts"></div>
+  </div>
+</section>
+
+<div id="rs-footer"></div>
+
+<!-- Write a Review modal -->
+<div class="modal fade" id="rsReviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:18px; border:none;">
+      <div class="modal-body p-4">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <h5 class="mb-0">Write a Review</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form id="rsReviewForm">
+          <div class="mb-3">
+            <label class="form-label small text-muted">Your Rating</label>
+            <div id="rsStarInput" style="font-size:1.6rem; color:var(--primary); cursor:pointer;">
+              <i class="bi bi-star" data-val="1"></i>
+              <i class="bi bi-star" data-val="2"></i>
+              <i class="bi bi-star" data-val="3"></i>
+              <i class="bi bi-star" data-val="4"></i>
+              <i class="bi bi-star" data-val="5"></i>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small text-muted">Your Review</label>
+            <textarea class="form-control" id="rsReviewText" rows="4" placeholder="Share how this product worked for you..."></textarea>
+          </div>
+          <button type="submit" class="btn-radiant btn w-100">Post Review</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/partials.js"></script>
+<script>
+  rsMountPartials("shop");
+
+  const params = new URLSearchParams(window.location.search);
+  const product = rsFindProduct(params.get('id')) || RS_PRODUCTS[0];
+
+  // Sample reviews (static demo content)
+  const reviews = [
+    { name: "Divya R.", rating: 5, text: "Absorbs so fast and my skin feels plump by morning. Smells lovely too — not overpowering." },
+    { name: "Kavya J.", rating: 4, text: "Great texture and gentle on sensitive skin. Took about two weeks to see visible glow." },
+    { name: "Sneha P.", rating: 5, text: "Lightweight, non-sticky, and the packaging is beautiful. Repeat purchase for sure." }
+  ];
+
+  document.getElementById('rsProductRoot').innerHTML = `
+    <div class="rs-breadcrumb"><a href="index.html">Home</a> / <a href="shop.html">Shop</a> / <span class="current">${product.name}</span></div>
+    <div class="row g-5 align-items-start mt-1">
+      <div class="col-lg-6">
+        <div class="rs-card p-3 p-md-4 mb-3" style="background:${RS_CATEGORIES[product.category].color}; border-radius:20px;">
+          <div style="width:100%; height:480px; aspect-ratio:1/1; max-width:100%; overflow:hidden; border-radius:16px; background:#ffffff; display:flex; align-items:center; justify-content:center; padding:20px;">
+            ${rsProductImage(product)}
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          ${[1,2,3,4].map(i=>`<div class="rs-card p-2" style="width:75px;height:75px;background:${RS_CATEGORIES[product.category].color};overflow:hidden;border-radius:12px;display:flex;align-items:center;justify-content:center;">${rsProductImage(product)}</div>`).join('')}
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <span class="badge rounded-pill mb-2" style="background:var(--blush); color:var(--primary-dark);">${product.categoryLabel}</span>
+        <div class="text-muted small mb-1">${product.brand}</div>
+        <h1 class="display-6 mb-3">${product.name}</h1>
+        <div class="d-flex align-items-center gap-2 mb-3" id="pHeaderRatingWrap"></div>
+        <div class="d-flex align-items-center gap-2 mb-4">
+          <span class="fs-3 fw-semibold" style="color:var(--primary-dark);">${rsFormatINR(product.price)}</span>
+          ${product.oldPrice ? `<span class="fs-5 text-muted text-decoration-line-through">${rsFormatINR(product.oldPrice)}</span><span class="badge" style="background:var(--primary);">-${product.discount}%</span>` : ''}
+        </div>
+        <p class="text-muted mb-4">${product.desc}</p>
+
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="qty-box">
+            <button onclick="rsChangeQty(-1)">−</button>
+            <input type="text" id="rsQtyInput" value="1" readonly>
+            <button onclick="rsChangeQty(1)">+</button>
+          </div>
+          <button class="btn-radiant btn flex-grow-1" onclick="rsAddToCartGated('${product.id}', rsGetQty())"><i class="bi bi-bag-plus me-1"></i> Add to Cart</button>
+          <button class="rs-icon-btn border-0" onclick="this.classList.toggle('active', rsToggleWishlist('${product.id}')); this.querySelector('i').className='bi bi-heart'+(this.classList.contains('active')?'-fill':'');">
+            <i class="bi bi-heart${rsIsWishlisted(product.id)?'-fill':''}"></i>
+          </button>
+        </div>
+
+        <ul class="list-unstyled small text-muted">
+          <li class="mb-2"><i class="bi bi-truck me-2"></i>Free shipping on orders above $50</li>
+          <li class="mb-2"><i class="bi bi-arrow-repeat me-2"></i>7-day easy returns</li>
+          <li><i class="bi bi-shield-check me-2"></i>Dermatologically tested & cruelty-free</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-lg-8">
+        <h4 class="mb-3">Experience Unrivaled Purity</h4>
+        <p class="text-muted">Formulated with cold-pressed botanical extracts and free from parabens, sulfates and synthetic fragrance, this ${product.categoryLabel.toLowerCase()} is designed to work in harmony with your skin's natural rhythm — leaving it feeling calm, balanced and luminous.</p>
+      </div>
+    </div>
+
+    <hr class="my-5">
+
+    <div class="row">
+      <div class="col-lg-8">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h4 class="mb-0">Community Praise</h4>
+          <span class="text-muted small" id="rsReviewSummary"></span>
+        </div>
+        <div class="row g-3" id="rsReviewList"></div>
+        <button class="btn-outline-radiant btn mt-4" onclick="openReviewForm()"><i class="bi bi-star me-1"></i> Write a Review & Rate Product</button>
+      </div>
+    </div>
+  `;
+
+  // ---------- Reviews: Live User Reviews ----------
+  async function syncReviewsFromDB(){
+    try {
+      const res = await fetch(`http://localhost:8080/api/reviews?productId=${encodeURIComponent(product.id)}`);
+      if(res.ok){
+        const dbRev = await res.json();
+        if(Array.isArray(dbRev)){
+          const user = rsCurrentUser();
+          const mapped = dbRev.filter(r => (r.status || 'Approved') === 'Approved').map(r => ({
+            id: r.id,
+            name: r.userName || 'Customer',
+            rating: Number(r.rating) || 5,
+            text: r.comment || '',
+            own: (user && user.email && r.userEmail && user.email.toLowerCase() === r.userEmail.toLowerCase())
+          }));
+          rsSaveReviews(product.id, mapped);
+          renderReviews();
+        }
+      }
+    } catch(e){}
+  }
+
+  function renderReviews(){
+    const myReviews = rsGetReviews(product.id);
+    const rInfo = rsGetProductRatingInfo(product.id);
+
+    // Update Header Rating
+    const headerEl = document.getElementById('pHeaderRatingWrap');
+    if(headerEl){
+      headerEl.innerHTML = `
+        <span class="rating-stars">${rsStars(rInfo.rating)}</span>
+        <span class="text-muted small ms-1">${rInfo.rating} (${rInfo.count} review${rInfo.count===1?'':'s'})</span>
+      `;
+    }
+
+    // Update Section Summary
+    document.getElementById('rsReviewSummary').innerHTML =
+      `${rInfo.rating} <i class="bi bi-star-fill text-warning"></i> · ${rInfo.count} review${rInfo.count===1?'':'s'}`;
+
+    const listEl = document.getElementById('rsReviewList');
+    if(!myReviews.length){
+      listEl.innerHTML = `
+        <div class="col-12">
+          <div class="p-4 rounded-4 text-center text-muted border" style="background:var(--cream-soft,#FAF7F2);">
+            <i class="bi bi-star text-warning fs-3"></i>
+            <p class="mb-0 mt-2">No reviews yet for this product.<br><strong>Be the first customer to write a review!</strong></p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = myReviews.map(r => `
+      <div class="col-md-6">
+        <div class="testimonial-card p-3 rounded-4 border bg-white h-100">
+          ${r.own ? `<button class="btn-close float-end" title="Delete" onclick="deleteMyReview('${r.id}')"></button>` : ''}
+          <div class="stars mb-2">${rsStars(r.rating)}</div>
+          <p class="text-muted small mb-2">"${r.text}"</p>
+          <div class="fw-semibold small mt-2">${r.name}${r.own ? ' <span class="badge rounded-pill ms-1" style="background:var(--blush); color:var(--primary-dark);">You</span>' : ''}</div>
+        </div>
+      </div>`).join('');
+  }
+  renderReviews();
+  syncReviewsFromDB();
+
+  async function deleteMyReview(reviewId){
+    if(!confirm("Delete this review?")) return;
+    rsDeleteReview(product.id, reviewId);
+    renderReviews();
+
+    try {
+      await fetch(`http://localhost:8080/api/reviews?id=${reviewId}`, { method: "DELETE" });
+    } catch(e){}
+
+    rsToast("Review deleted ✓", "info");
+  }
+
+  let selectedRating = 0;
+  function openReviewForm(){
+    if(!rsRequireLogin()) return;
+    selectedRating = 0;
+    document.getElementById('rsReviewText').value = '';
+    document.querySelectorAll('#rsStarInput i').forEach(s => s.className = 'bi bi-star');
+    new bootstrap.Modal(document.getElementById('rsReviewModal')).show();
+  }
+
+  document.querySelectorAll('#rsStarInput i').forEach(star => {
+    star.addEventListener('click', function(){
+      selectedRating = Number(this.dataset.val);
+      document.querySelectorAll('#rsStarInput i').forEach(s => {
+        s.className = Number(s.dataset.val) <= selectedRating ? 'bi bi-star-fill' : 'bi bi-star';
+      });
+    });
+  });
+
+  document.getElementById('rsReviewForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const text = document.getElementById('rsReviewText').value.trim();
+    if(selectedRating < 1){ rsToast("Please select a star rating.", "danger"); return; }
+    if(!text){ rsToast("Please write a few words.", "danger"); return; }
+    const user = rsCurrentUser();
+    const uName = user ? (user.name || "Customer") : "Customer";
+    const uEmail = user ? (user.email || "") : "";
+
+    // Local save
+    rsAddReview(product.id, { name: uName, rating: selectedRating, text: text, own: true });
+    bootstrap.Modal.getInstance(document.getElementById('rsReviewModal')).hide();
+    renderReviews();
+
+    // MySQL DB save
+    try {
+      const res = await fetch("http://localhost:8080/api/reviews", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: product.id,
+          productName: product.name,
+          userName: uName,
+          userEmail: uEmail,
+          rating: selectedRating,
+          comment: text
+        })
+      });
+      const data = await res.json();
+      if(data.success){
+        rsToast("Thanks! Your review has been posted ✓", "success");
+        await syncReviewsFromDB();
+      } else {
+        rsToast(data.message || "Failed to save review in MySQL DB.", "danger");
+      }
+    } catch(err){
+      console.warn("Backend offline:", err);
+      rsToast("Thanks! Your review has been posted locally ✓", "success");
+    }
+  });
+
+  function rsGetQty(){ return Number(document.getElementById('rsQtyInput').value); }
+  function rsChangeQty(delta){
+    const input = document.getElementById('rsQtyInput');
+    input.value = Math.max(1, Number(input.value) + delta);
+  }
+
+  // Related products (same category, exclude self)
+  const related = RS_PRODUCTS.filter(p => p.category === product.category && p.id !== product.id).slice(0,4);
+  document.getElementById('rsRelatedProducts').innerHTML = related.map(p => `
+    <div class="col-lg-3 col-md-6 col-6">
+      <div class="product-card">
+        ${p.discount ? `<span class="discount-badge">-${p.discount}%</span>` : ''}
+        <a href="product-details.html?id=${p.id}" class="text-decoration-none text-reset">
+          <div class="product-img-wrap">${rsProductImage(p)}</div>
+          <div class="p-body">
+            <div class="p-brand">${p.brand}</div>
+            <div class="p-name">${p.name}</div>
+            <div class="p-price">${rsFormatINR(p.price)}</div>
+          </div>
+        </a>
+        <div class="px-3 pb-3">
+          <button class="btn-radiant btn btn-sm w-100" onclick="rsAddToCartGated('${p.id}',1)">Add to Cart</button>
+        </div>
+      </div>
+    </div>`).join('');
+</script>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sales & Analytics Report | Radiant Skin Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/admin.css" rel="stylesheet">
+<style>
+  .report-progress {
+    height: 8px;
+    border-radius: 4px;
+    background: #EFE9E5;
+    overflow: hidden;
+  }
+  .report-progress-bar {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+  @media print {
+    .admin-sidebar, .admin-topbar button, .admin-topbar select, .no-print {
+      display: none !important;
+    }
+    .admin-main {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    body {
+      background: white !important;
+    }
+    .admin-card, .admin-stat-card {
+      box-shadow: none !important;
+      border: 1px solid #ccc !important;
+    }
+  }
+</style>
+<script src="js/main.js"></script>
+<script>
+  if (!rsIsAdminLoggedIn()) {
+    window.location.replace("admin-login.html");
+  }
+</script>
+</head>
+<body class="admin-body">
+
+<div class="admin-shell">
+  <div id="rs-admin-sidebar"></div>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h2>Sales & Analytics Report</h2>
+        <span class="text-muted small" id="reportDateSubtitle">Real-time store performance & business insights</span>
+      </div>
+      <div class="d-flex gap-2 no-print">
+        <button class="btn btn-sm btn-outline-dark" onclick="exportReportCSV()"><i class="bi bi-file-earmark-spreadsheet me-1"></i> Export CSV</button>
+        <button class="btn btn-sm btn-dark" onclick="window.print()"><i class="bi bi-printer me-1"></i> Print / Save PDF</button>
+      </div>
+    </div>
+
+    <!-- 4 Key Stat Metrics -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-3">
+        <div class="admin-stat-card">
+          <div class="label"><i class="bi bi-currency-rupee me-1"></i> Total Net Revenue</div>
+          <div class="value" id="repRevenue">₹0</div>
+          <div class="text-muted small mt-1" id="repAov">AOV: ₹0</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="admin-stat-card">
+          <div class="label"><i class="bi bi-bag-check me-1"></i> Total Orders</div>
+          <div class="value" id="repOrders">0</div>
+          <div class="text-success small mt-1" id="repDeliveredRatio">0 delivered</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="admin-stat-card">
+          <div class="label"><i class="bi bi-people me-1"></i> Registered Customers</div>
+          <div class="value" id="repCustomers">0</div>
+          <div class="text-muted small mt-1" id="repActiveLabel">Verified users in DB</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="admin-stat-card">
+          <div class="label"><i class="bi bi-star-fill text-warning me-1"></i> Avg. Customer Rating</div>
+          <div class="value text-warning" id="repRating">5.0 ★</div>
+          <div class="text-muted small mt-1" id="repReviewsCount">0 total reviews</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics Charts & Status Breakdown -->
+    <div class="row g-4 mb-4">
+      <div class="col-lg-6">
+        <div class="admin-card h-100">
+          <h5 class="mb-3"><i class="bi bi-pie-chart me-2" style="color:var(--primary);"></i>Order Status Breakdown</h5>
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small fw-medium mb-1">
+              <span>Delivered</span>
+              <span id="stDelivText">0 orders (0%)</span>
+            </div>
+            <div class="report-progress"><div class="report-progress-bar bg-success" id="barDeliv" style="width:0%;"></div></div>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small fw-medium mb-1">
+              <span>Shipped / In Transit</span>
+              <span id="stShipText">0 orders (0%)</span>
+            </div>
+            <div class="report-progress"><div class="report-progress-bar bg-info" id="barShip" style="width:0%;"></div></div>
+          </div>
+
+          <div class="mb-3">
+            <div class="d-flex justify-content-between small fw-medium mb-1">
+              <span>Processing / New</span>
+              <span id="stProcText">0 orders (0%)</span>
+            </div>
+            <div class="report-progress"><div class="report-progress-bar bg-warning" id="barProc" style="width:0%;"></div></div>
+          </div>
+
+          <div>
+            <div class="d-flex justify-content-between small fw-medium mb-1">
+              <span>Cancelled</span>
+              <span id="stCancText">0 orders (0%)</span>
+            </div>
+            <div class="report-progress"><div class="report-progress-bar bg-danger" id="barCanc" style="width:0%;"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="admin-card h-100">
+          <h5 class="mb-3"><i class="bi bi-trophy me-2" style="color:var(--primary);"></i>Top Selling Products</h5>
+          <div id="topProductsList" class="d-flex flex-column gap-3">
+            <p class="text-muted small">Loading sales data...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Sales Table -->
+    <div class="admin-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="bi bi-receipt me-2" style="color:var(--primary);"></i>Recent Orders & Revenue Log</h5>
+        <span class="text-muted small" id="logCount">0 orders</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="admin-table" id="salesReportTable">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Items Count</th>
+              <th>Total Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="salesBody"></tbody>
+        </table>
+      </div>
+      <p class="text-muted small mt-3 mb-0 text-center py-3" id="noSalesAlert" style="display:none;">No sales data available yet.</p>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/admin.js"></script>
+<script>
+  rsMountAdmin("reports");
+
+  let reportData = {};
+  let allOrdersList = [];
+
+  async function loadReport(){
+    // Fetch aggregated metrics from backend API
+    try {
+      const res = await fetch("http://localhost:8080/api/reports");
+      if(res.ok){
+        reportData = await res.json();
+      }
+    } catch(e){}
+
+    // Fetch live orders for detailed table
+    try {
+      const oRes = await fetch("http://localhost:8080/api/orders");
+      if(oRes.ok){
+        allOrdersList = await oRes.json();
+      } else {
+        allOrdersList = rsGet("rs_orders", []);
+      }
+    } catch(e){
+      allOrdersList = rsGet("rs_orders", []);
+    }
+
+    renderReportView();
+  }
+
+  function renderReportView(){
+    const totalOrders = allOrdersList.length;
+    let netRevenue = 0;
+    let deliv = 0, ship = 0, proc = 0, canc = 0;
+
+    allOrdersList.forEach(o => {
+      const s = o.status || 'Processing';
+      if(s !== 'Cancelled') netRevenue += Number(o.total || 0);
+      if(s === 'Delivered') deliv++;
+      else if(s === 'Shipped') ship++;
+      else if(s === 'Processing') proc++;
+      else if(s === 'Cancelled') canc++;
+    });
+
+    const aov = (totalOrders - canc) > 0 ? (netRevenue / (totalOrders - canc)) : 0;
+    const usersCount = (reportData && reportData.totalUsers) || rsGetUsers().filter(u=>u.role!=='admin').length;
+    const avgRating = (reportData && reportData.avgRating) || 5.0;
+    const revCount = (reportData && reportData.totalReviews) || 0;
+
+    document.getElementById('repRevenue').textContent = rsFormatINR(netRevenue);
+    document.getElementById('repAov').textContent = "Avg Order: " + rsFormatINR(aov);
+    document.getElementById('repOrders').textContent = totalOrders;
+    document.getElementById('repDeliveredRatio').textContent = deliv + " delivered (" + (totalOrders>0?Math.round((deliv/totalOrders)*100):0) + "%)";
+    document.getElementById('repCustomers').textContent = usersCount;
+    document.getElementById('repRating').textContent = Number(avgRating).toFixed(1) + " ★";
+    document.getElementById('repReviewsCount').textContent = revCount + " product reviews";
+
+    // Progress Bars
+    const pctDeliv = totalOrders ? Math.round((deliv/totalOrders)*100) : 0;
+    const pctShip = totalOrders ? Math.round((ship/totalOrders)*100) : 0;
+    const pctProc = totalOrders ? Math.round((proc/totalOrders)*100) : 0;
+    const pctCanc = totalOrders ? Math.round((canc/totalOrders)*100) : 0;
+
+    document.getElementById('stDelivText').textContent = `${deliv} orders (${pctDeliv}%)`;
+    document.getElementById('barDeliv').style.width = pctDeliv + '%';
+
+    document.getElementById('stShipText').textContent = `${ship} orders (${pctShip}%)`;
+    document.getElementById('barShip').style.width = pctShip + '%';
+
+    document.getElementById('stProcText').textContent = `${proc} orders (${pctProc}%)`;
+    document.getElementById('barProc').style.width = pctProc + '%';
+
+    document.getElementById('stCancText').textContent = `${canc} orders (${pctCanc}%)`;
+    document.getElementById('barCanc').style.width = pctCanc + '%';
+
+    // Top Selling Products Calculation
+    renderTopSelling(allOrdersList);
+
+    // Sales Table
+    document.getElementById('logCount').textContent = totalOrders + ' orders placed';
+    document.getElementById('noSalesAlert').style.display = totalOrders ? 'none' : 'block';
+
+    const badgeClass = { "Processing":"processing", "Shipped":"shipped", "Delivered":"delivered", "Cancelled":"cancelled" };
+    document.getElementById('salesBody').innerHTML = allOrdersList.slice().reverse().map(o => `
+      <tr>
+        <td class="fw-semibold">#RS-${o.id}</td>
+        <td>
+          <div class="fw-medium">${o.shipping ? o.shipping.name : (o.customer_name || 'Customer')}</div>
+          <div class="small text-muted">${o.shipping ? o.shipping.phone : (o.customer_phone || '')}</div>
+        </td>
+        <td class="small text-muted">${o.date || 'Today'}</td>
+        <td>${o.items ? o.items.length : 1} item(s)</td>
+        <td class="fw-semibold">${rsFormatINR(o.total || o.total_amount || 0)}</td>
+        <td><span class="admin-badge ${badgeClass[o.status] || 'processing'}">${o.status || 'Processing'}</span></td>
+      </tr>`).join('');
+  }
+
+  function renderTopSelling(orders){
+    // Count items across all non-cancelled orders
+    const itemCounts = {};
+    orders.forEach(o => {
+      if(o.status === 'Cancelled') return;
+      if(Array.isArray(o.items)){
+        o.items.forEach(it => {
+          const pId = it.id || it.product_id;
+          const p = rsFindProduct(pId) || { name: it.name || it.product_name || "Product", price: it.price || 350 };
+          if(!itemCounts[p.name]){
+            itemCounts[p.name] = { name: p.name, qty: 0, revenue: 0, p: p };
+          }
+          const q = Number(it.qty || it.quantity || 1);
+          itemCounts[p.name].qty += q;
+          itemCounts[p.name].revenue += (q * (p.price || 350));
+        });
+      }
+    });
+
+    const sorted = Object.values(itemCounts).sort((a,b) => b.qty - a.qty).slice(0, 5);
+    const container = document.getElementById('topProductsList');
+
+    if(!sorted.length){
+      container.innerHTML = `
+        <div class="text-center py-4 text-muted">
+          <i class="bi bi-bag-x fs-2"></i>
+          <p class="mb-0 mt-2 small">No product sales logged yet.</p>
+        </div>`;
+      return;
+    }
+
+    const maxQty = sorted[0].qty || 1;
+    container.innerHTML = sorted.map((item, idx) => {
+      const sharePct = Math.round((item.qty / maxQty) * 100);
+      return `
+      <div>
+        <div class="d-flex justify-content-between align-items-center mb-1">
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge rounded-circle bg-dark text-white" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">${idx+1}</span>
+            <span class="fw-medium small">${item.name}</span>
+          </div>
+          <div class="text-end small">
+            <span class="fw-bold">${item.qty} sold</span> · <span class="text-muted">${rsFormatINR(item.revenue)}</span>
+          </div>
+        </div>
+        <div class="report-progress"><div class="report-progress-bar" style="width:${sharePct}%; background:var(--primary,#4E8A7A);"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  function exportReportCSV(){
+    if(!allOrdersList.length){
+      rsToast("No sales data to export.", "info");
+      return;
+    }
+
+    let csv = "Order ID,Customer Name,Phone,Date,Items Count,Total Amount,Status\n";
+    allOrdersList.forEach(o => {
+      const cName = `"${(o.shipping ? o.shipping.name : (o.customer_name || 'Customer')).replace(/"/g, '""')}"`;
+      const phone = o.shipping ? o.shipping.phone : (o.customer_phone || '');
+      const date = o.date || 'Today';
+      const items = o.items ? o.items.length : 1;
+      const total = o.total || o.total_amount || 0;
+      const status = o.status || 'Processing';
+      csv += `#RS-${o.id},${cName},${phone},${date},${items},${total},${status}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute("download", `Radiant_Skin_Sales_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    rsToast("Sales Report CSV downloaded ✓", "success");
+  }
+
+  loadReport();
+</script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order History | Radiant Skin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="rs-navbar"></div>
+
+<section class="container pt-4">
+  <div class="rs-breadcrumb"><a href="index.html">Home</a> / <a href="profile.html">My Profile</a> / <span class="current">Order History</span></div>
+  <h1 class="display-6 mb-4">Order History</h1>
+
+  <div class="rs-card p-4">
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <select class="form-select w-auto" id="rsStatusFilter">
+        <option value="all">All Statuses</option>
+        <option value="Delivered">Delivered</option>
+        <option value="Shipped">Shipped</option>
+        <option value="Processing">Processing</option>
+        <option value="Cancelled">Cancelled</option>
+      </select>
+    </div>
+    <div class="table-responsive">
+      <table class="table rs-table mb-0">
+        <thead><tr><th>Order ID</th><th>Date</th><th>Items</th><th>Status</th><th>Total</th><th>Payment</th><th></th></tr></thead>
+        <tbody id="rsOrdersBody"></tbody>
+      </table>
+    </div>
+    <div id="rsNoOrders" class="text-center py-5 text-muted" style="display:none;">
+      <i class="bi bi-bag-x fs-1"></i>
+      <p class="mt-2">You haven't placed any orders yet.</p>
+      <a href="shop.html" class="btn-radiant btn">Start Shopping</a>
+    </div>
+  </div>
+</section>
+
+<div id="rs-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/partials.js"></script>
+<script>
+  rsMountPartials("");
+  if(!rsIsLoggedIn()){
+    sessionStorage.setItem("rs_redirect", "order-history.html");
+    window.location.href = "login.html";
+  }
+
+  const statusClass = { "Delivered":"status-delivered", "Processing":"status-processing", "Shipped":"status-shipped", "Cancelled":"status-cancelled" };
+
+  function render(){
+    const orders = rsGet("rs_orders", []);
+    const filter = document.getElementById('rsStatusFilter').value;
+    let list = orders.slice().reverse();
+    if(filter !== 'all') list = list.filter(o => o.status === filter);
+    document.getElementById('rsOrdersBody').innerHTML = list.map(o => `
+      <tr>
+        <td>#${o.id}</td>
+        <td>${o.date}</td>
+        <td>${o.items ? o.items.length : 0} item${(o.items && o.items.length>1)?'s':''}</td>
+        <td><span class="status-badge ${statusClass[o.status] || 'status-processing'}">${o.status}</span></td>
+        <td>${rsFormatINR(o.total)}</td>
+        <td><span class="badge" style="background:var(--beige); color:var(--text);">Cash on Delivery</span></td>
+        <td>
+          <a href="order-confirmation.html?id=${o.id}" class="small me-2" style="color:var(--primary);">View</a>
+          ${o.status === 'Processing' ? `<a href="javascript:void(0)" onclick="cancelOrder(${o.id})" class="small text-danger">Cancel</a>` : ''}
+        </td>
+      </tr>`).join('');
+    document.getElementById('rsNoOrders').style.display = orders.length ? 'none' : 'block';
+  }
+
+  async function cancelOrder(orderId){
+    if(!confirm("Are you sure you want to cancel Order #" + orderId + "?")){
+      return;
+    }
+
+    const orders = rsGet("rs_orders", []);
+    const o = orders.find(x => x.id === orderId);
+    if(o){
+      o.status = "Cancelled";
+      rsSet("rs_orders", orders);
+      rsToast("Order #" + orderId + " has been cancelled.", "info");
+      render();
+
+      try {
+        await fetch("http://localhost:8080/api/orders", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: orderId,
+            order_number: o.orderNumber || ("ORD-" + orderId),
+            status: "Cancelled"
+          })
+        });
+      } catch(err) {
+        console.warn("Backend offline:", err);
+      }
+    }
+  }
+
+  async function syncOrdersFromDB() {
+    try {
+      const res = await fetch("http://localhost:8080/api/orders");
+      if (res.ok) {
+        const dbOrders = await res.json();
+        if (Array.isArray(dbOrders) && dbOrders.length > 0) {
+          const localOrders = rsGet("rs_orders", []);
+          dbOrders.forEach(dbo => {
+            const loc = localOrders.find(l => l.id == dbo.id || l.orderNumber == dbo.number || (l.shipping && l.shipping.phone === dbo.shipping.phone && Math.abs(l.total - dbo.total) < 1));
+            if (loc) {
+              loc.status = dbo.status;
+            }
+          });
+          rsSet("rs_orders", localOrders);
+          render();
+        }
+      }
+    } catch(e) {
+      console.warn("Backend sync offline:", e);
+    }
+  }
+
+  document.getElementById('rsStatusFilter').addEventListener('change', render);
+  render();
+  syncOrdersFromDB();
+</script>
+</body>
+</html>

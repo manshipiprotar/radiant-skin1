@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout | Radiant Skin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<div id="rs-navbar"></div>
+
+<section class="container pt-4">
+  <div class="rs-breadcrumb"><a href="index.html">Home</a> / <a href="cart.html">Cart</a> / <span class="current">Checkout</span></div>
+  <h1 class="display-6 mb-3">Checkout</h1>
+
+  <div class="step-indicator">
+    <div class="step"><span class="num"><i class="bi bi-check"></i></span> Cart</div>
+    <div class="sep"></div>
+    <div class="step active"><span class="num">2</span> Shipping & Payment</div>
+    <div class="sep"></div>
+    <div class="step"><span class="num">3</span> Confirmation</div>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <form id="rsCheckoutForm">
+        <div class="rs-card p-4 mb-4">
+          <h5 class="mb-3"><i class="bi bi-geo-alt me-2"></i>Shipping Address</h5>
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">Full Name</label><input type="text" class="form-control" id="cName" required></div>
+            <div class="col-md-6"><label class="form-label">Phone Number</label><input type="tel" class="form-control" id="cPhone" inputmode="numeric" pattern="[0-9]{10}" maxlength="10" title="Enter a 10 digit phone number" required></div>
+            <div class="col-12"><label class="form-label">Address Line</label><input type="text" class="form-control" id="cAddress" required></div>
+            <div class="col-md-4">
+              <label class="form-label">City</label>
+              <input type="text" class="form-control" id="cCity" placeholder="Enter City (e.g. Upleta / Rajkot)" required>
+            </div>
+            <div class="col-md-4"><label class="form-label">State</label><input type="text" class="form-control" id="cState" value="Gujarat" required></div>
+            <div class="col-md-4"><label class="form-label">PIN Code</label><input type="text" class="form-control" id="cPin" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" title="Enter a 6 digit PIN code" required></div>
+          </div>
+        </div>
+
+        <div class="rs-card p-4 mb-4">
+          <h5 class="mb-3"><i class="bi bi-wallet2 me-2"></i>Payment Method</h5>
+          <div class="rs-card p-3 d-flex align-items-center gap-3" style="background:var(--cream-soft); border:1.5px solid var(--primary);">
+            <input class="form-check-input mt-0" type="radio" name="payment" checked disabled>
+            <div class="flex-grow-1">
+              <div class="fw-medium"><i class="bi bi-cash-coin me-2" style="color:var(--primary);"></i>Cash on Delivery</div>
+              <div class="text-muted small">Pay with cash when your order is delivered to your doorstep.</div>
+            </div>
+            <i class="bi bi-check-circle-fill" style="color:var(--primary);"></i>
+          </div>
+          <p class="text-muted small mt-2 mb-0"><i class="bi bi-info-circle me-1"></i>Radiant Skin currently accepts Cash on Delivery only.</p>
+        </div>
+
+        <button type="submit" class="btn-radiant btn w-100 py-3">Complete Purchase</button>
+      </form>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="rs-card p-4">
+        <h5 class="mb-3">Order Summary</h5>
+        <div id="rsCheckoutItems"></div>
+        <hr>
+        <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Subtotal</span><span id="cSubtotal">₹0</span></div>
+        <div class="d-flex justify-content-between small mb-2"><span class="text-muted">Shipping</span><span id="cShipping">₹0</span></div>
+        <div class="d-flex justify-content-between small mb-2"><span class="text-muted">COD Fee</span><span id="cCodFee">₹0</span></div>
+        <hr>
+        <div class="d-flex justify-content-between fw-semibold"><span>Total</span><span id="cTotal">₹0</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="rs-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/partials.js"></script>
+<script>
+  rsMountPartials("");
+
+  if(!rsIsLoggedIn()){
+    sessionStorage.setItem("rs_redirect", "checkout.html");
+    window.location.href = "login.html";
+  }
+  const cart = rsGetCart();
+  if(!cart.length){ window.location.href = "cart.html"; }
+
+  const user = rsCurrentUser();
+  if(user) {
+    document.getElementById('cName').value = user.name || '';
+    if(user.phone) document.getElementById('cPhone').value = user.phone;
+    if(user.city) document.getElementById('cCity').value = user.city;
+  }
+
+  ['cPhone','cPin'].forEach(function(id){
+    const maxLen = id === 'cPhone' ? 10 : 6;
+    document.getElementById(id).addEventListener('input', function(e){
+      e.target.value = e.target.value.replace(/\D/g, '').slice(0, maxLen);
+    });
+  });
+
+  document.getElementById('rsCheckoutItems').innerHTML = cart.map(item => {
+    const p = rsFindProduct(item.id);
+    return `<div class="d-flex justify-content-between small mb-2"><span class="text-muted">${p.name} x${item.qty}</span><span>${rsFormatINR(p.price*item.qty)}</span></div>`;
+  }).join('');
+
+  const subtotal = rsCartTotal();
+  const shipping = subtotal >= 999 ? 0 : 49;
+  const codFee = 15;
+  const total = subtotal + shipping + codFee;
+  document.getElementById('cSubtotal').textContent = rsFormatINR(subtotal);
+  document.getElementById('cShipping').textContent = shipping === 0 ? 'Free' : rsFormatINR(shipping);
+  document.getElementById('cCodFee').textContent = rsFormatINR(codFee);
+  document.getElementById('cTotal').textContent = rsFormatINR(total);
+
+  document.getElementById('rsCheckoutForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Placing Order...';
+    }
+
+    const orderId = Math.floor(100000 + Math.random()*899999);
+    const shippingName = document.getElementById('cName').value.trim();
+    const shippingPhone = document.getElementById('cPhone').value.trim();
+    const shippingAddress = document.getElementById('cAddress').value.trim();
+    const shippingCity = document.getElementById('cCity').value.trim();
+    const shippingState = document.getElementById('cState').value.trim();
+    const shippingPin = document.getElementById('cPin').value.trim();
+
+    // Auto-save user's phone & city to their profile if not present
+    if(user){
+      rsUpdateCurrentUser({
+        phone: user.phone || shippingPhone,
+        city: user.city || shippingCity
+      });
+    }
+
+    // Format items string for DB: "id::name::price::qty||id2::name2::..."
+    const itemsFormatted = cart.map(i => {
+      const p = rsFindProduct(i.id) || { name: 'Product', price: 0 };
+      return `${i.id}::${p.name}::${p.price}::${i.qty}`;
+    }).join('||');
+
+    const orderPayload = {
+      orderNumber: "ORD-" + orderId,
+      name: shippingName,
+      email: (user && user.email) || "",
+      phone: shippingPhone,
+      address: shippingAddress,
+      city: shippingCity,
+      state: shippingState,
+      pincode: shippingPin,
+      paymentMethod: "Cash on Delivery",
+      total: Math.round(total),
+      items: itemsFormatted
+    };
+
+    let dbId = null;
+    try {
+      const res = await fetch("http://localhost:8080/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(orderPayload)
+      });
+      const data = await res.json().catch(()=>({}));
+      if(data && data.id) dbId = data.id;
+      console.log("Order saved to MySQL DB:", data);
+    } catch(err) {
+      console.warn("Backend API offline", err);
+    }
+
+    const order = {
+      id: orderId,
+      dbId: dbId,
+      orderNumber: "ORD-" + orderId,
+      date: new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }),
+      status: "Processing",
+      total: Math.round(total),
+      payment: "Cash on Delivery",
+      items: cart.map(i => ({ id:i.id, qty:i.qty })),
+      shipping: {
+        name: shippingName,
+        phone: shippingPhone,
+        address: shippingAddress,
+        city: shippingCity,
+        state: shippingState,
+        pin: shippingPin
+      }
+    };
+    const orders = rsGet("rs_orders", []);
+    orders.push(order);
+    rsSet("rs_orders", orders);
+    rsSet("rs_cart", []);
+    window.location.href = "order-confirmation.html?id=" + orderId;
+  });
+</script>
+</body>
+</html>

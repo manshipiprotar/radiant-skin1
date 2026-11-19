@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Products | Radiant Skin Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/admin.css" rel="stylesheet">
+<script src="js/main.js"></script>
+<script>
+  if (!rsIsAdminLoggedIn()) {
+    window.location.replace("admin-login.html");
+  }
+</script>
+<style>
+  .admin-thumb { width:48px; height:48px; border-radius:10px; object-fit:cover; background:var(--admin-bg); display:inline-flex; align-items:center; justify-content:center; overflow:hidden; }
+  .admin-thumb svg { width:100%; height:100%; }
+  .img-preview-box { width:90px; height:90px; border-radius:12px; border:2px dashed #D0C3C7; display:flex; align-items:center; justify-content:center; overflow:hidden; background:#FAF7F2; margin-top:8px; }
+  .img-preview-box img { width:100%; height:100%; object-fit:cover; }
+  .cat-badge-item { display:flex; align-items:center; justify-content:space-between; padding:8px 14px; background:#FAF7F2; border-radius:10px; margin-bottom:8px; border:1px solid #EBE2D8; }
+</style>
+</head>
+<body class="admin-body">
+
+<div class="admin-shell">
+  <div id="rs-admin-sidebar"></div>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h2>Manage Products</h2>
+        <span class="text-muted small" id="productCount">0 products</span>
+      </div>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-secondary" onclick="openCategoryModal()"><i class="bi bi-tags me-1"></i> Manage Categories</button>
+        <button class="btn btn-sm text-white" style="background:#6B4550;" onclick="openProductModal()"><i class="bi bi-plus-lg me-1"></i> Add New Product</button>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+        <div class="d-flex gap-2 flex-grow-1" style="max-width:540px;">
+          <input type="text" id="productSearch" class="form-control form-control-sm" placeholder="Search by name, brand, or category...">
+          <select id="categoryFilter" class="form-select form-select-sm" style="max-width:180px;">
+            <option value="all">All Categories</option>
+          </select>
+        </div>
+        <button class="btn btn-sm btn-light text-muted" onclick="resetDefaults()" title="Reset to original 60 products"><i class="bi bi-arrow-counterclockwise"></i> Reset Catalog</button>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Photo</th>
+              <th>Name & Brand</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Discount</th>
+              <th>Rating</th>
+              <th style="width:140px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsBody"></tbody>
+        </table>
+      </div>
+      <p class="text-muted small mt-3 mb-0 text-center py-4" id="noProductsMsg" style="display:none;">No products found matching your filter.</p>
+    </div>
+  </main>
+</div>
+
+<!-- ================= PRODUCT MODAL (ADD / EDIT) ================= -->
+<div class="modal fade" id="productModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content" style="border-radius:18px; border:none; box-shadow:0 15px 40px rgba(0,0,0,0.12);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="productModalTitle">Add New Product</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form id="productForm" onsubmit="saveProduct(event)">
+        <div class="modal-body pt-3">
+          <input type="hidden" id="pId">
+
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label small fw-semibold">Product Name *</label>
+              <input type="text" class="form-control form-control-sm" id="pName" required placeholder="e.g. Velvet Rose Glow Serum">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Brand *</label>
+              <input type="text" class="form-control form-control-sm" id="pBrand" required placeholder="e.g. Radiant Skin">
+            </div>
+
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Category *</label>
+              <select class="form-select form-select-sm" id="pCategory" required></select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Price (₹) *</label>
+              <input type="number" class="form-control form-control-sm" id="pPrice" required min="1" step="1" placeholder="e.g. 299">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold">Old Price / Strike Price (₹)</label>
+              <input type="number" class="form-control form-control-sm" id="pOldPrice" min="0" step="1" placeholder="e.g. 399">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold">Discount Badge (%)</label>
+              <input type="number" class="form-control form-control-sm" id="pDiscount" min="0" max="99" placeholder="e.g. 15 (Optional)">
+            </div>
+            <div class="col-md-6 d-flex align-items-center">
+              <div class="small text-muted p-2 rounded bg-light border w-100" style="font-size:0.75rem;">
+                <i class="bi bi-info-circle me-1 text-primary"></i> <strong>Note:</strong> Ratings & Reviews are submitted dynamically by customers.
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Product Image (Photo)</label>
+              <div class="row g-2 align-items-center">
+                <div class="col-md-7">
+                  <input type="text" class="form-control form-control-sm" id="pImage" placeholder="Image URL / Path (e.g. images/P001.jpg or https://...)" oninput="updateImagePreview()">
+                  <div class="small text-muted mt-1">Or choose a photo from your computer:</div>
+                  <input type="file" class="form-control form-control-sm mt-1" id="pImageFile" accept="image/*" onchange="handleImageUpload(this)">
+                </div>
+                <div class="col-md-5 d-flex align-items-center gap-3">
+                  <div class="img-preview-box" id="imagePreviewBox">
+                    <span class="small text-muted text-center p-1">No Image</span>
+                  </div>
+                  <div class="small text-muted">Preview<br><small>(SVG used if empty)</small></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label small fw-semibold">Product Description</label>
+              <textarea class="form-control form-control-sm" id="pDesc" rows="3" placeholder="A gentle, dermatologist-tested formula crafted with botanical extracts..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm text-white px-4" style="background:#6B4550;" id="saveProductBtn">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CATEGORY MODAL ================= -->
+<div class="modal fade" id="categoryModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:18px; border:none; box-shadow:0 15px 40px rgba(0,0,0,0.12);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Manage Categories</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <h6 class="small fw-bold text-muted mb-2 text-uppercase">Existing Categories</h6>
+        <div id="categoryListContainer" style="max-height:220px; overflow-y:auto;"></div>
+
+        <hr class="my-3">
+
+        <h6 class="small fw-bold text-muted mb-2 text-uppercase">Add New Category</h6>
+        <form id="categoryForm" onsubmit="saveCategory(event)">
+          <div class="row g-2">
+            <div class="col-md-6">
+              <label class="form-label small">Category ID / Key *</label>
+              <input type="text" class="form-control form-control-sm" id="catKey" required placeholder="e.g. bodylotion" pattern="[a-z0-9_]+">
+              <div class="form-text" style="font-size:0.72rem;">Lowercase, no spaces (e.g. lipcare)</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small">Display Name / Label *</label>
+              <input type="text" class="form-control form-control-sm" id="catLabel" required placeholder="e.g. Body Lotion">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small">Theme Color</label>
+              <input type="color" class="form-control form-control-color w-100" id="catColor" value="#F4DCC4">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small">Accent Color</label>
+              <input type="color" class="form-control form-control-color w-100" id="catAccent" value="#C97B4A">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small">Shape</label>
+              <select class="form-select form-select-sm" id="catShape">
+                <option value="jar">Jar</option>
+                <option value="pump">Pump</option>
+                <option value="dropper">Dropper</option>
+                <option value="tube">Tube</option>
+                <option value="spray">Spray</option>
+              </select>
+            </div>
+            <div class="col-12 mt-3">
+              <button type="submit" class="btn btn-sm w-100 text-white" style="background:#6B4550;">Add Category</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/admin.js"></script>
+<script>
+  rsMountAdmin("products");
+
+  let pModal, cModal;
+  document.addEventListener('DOMContentLoaded', () => {
+    pModal = new bootstrap.Modal(document.getElementById('productModal'));
+    cModal = new bootstrap.Modal(document.getElementById('categoryModal'));
+    populateCategoryDropdowns();
+    render();
+  });
+
+  function populateCategoryDropdowns(){
+    const cats = rsGetCategories();
+    const filterEl = document.getElementById('categoryFilter');
+    const formEl = document.getElementById('pCategory');
+
+    const currentFilter = filterEl.value;
+    filterEl.innerHTML = '<option value="all">All Categories</option>' + 
+      Object.keys(cats).map(k => `<option value="${k}">${cats[k].label}</option>`).join('');
+    filterEl.value = currentFilter || 'all';
+
+    formEl.innerHTML = Object.keys(cats).map(k => `<option value="${k}">${cats[k].label}</option>`).join('');
+  }
+
+  function render(){
+    const cats = rsGetCategories();
+    populateCategoryDropdowns();
+
+    const query = document.getElementById('productSearch').value.trim().toLowerCase();
+    const catFilter = document.getElementById('categoryFilter').value;
+
+    let list = rsGetProducts();
+
+    if(catFilter !== 'all'){
+      list = list.filter(p => p.category === catFilter);
+    }
+    if(query){
+      list = list.filter(p => 
+        (p.name && p.name.toLowerCase().includes(query)) ||
+        (p.brand && p.brand.toLowerCase().includes(query)) ||
+        (p.categoryLabel && p.categoryLabel.toLowerCase().includes(query)) ||
+        (p.id && p.id.toLowerCase().includes(query))
+      );
+    }
+
+    document.getElementById('productCount').textContent = list.length + ' products';
+    document.getElementById('noProductsMsg').style.display = list.length ? 'none' : 'block';
+
+    document.getElementById('productsBody').innerHTML = list.map(p => `
+      <tr>
+        <td>
+          <div class="admin-thumb">
+            ${rsProductImage(p)}
+          </div>
+        </td>
+        <td>
+          <div class="fw-semibold">${p.name}</div>
+          <span class="text-muted small">${p.brand || 'Radiant Skin'} <span class="badge bg-light text-dark ms-1" style="font-size:0.7rem;">#${p.id}</span></span>
+        </td>
+        <td>
+          <span class="badge" style="background:${(cats[p.category] && cats[p.category].color) || '#F4DCC4'}; color:#4B3438;">
+            ${p.categoryLabel || p.category}
+          </span>
+        </td>
+        <td>
+          <div class="fw-semibold">${rsFormatINR(p.price)}</div>
+          ${p.oldPrice ? `<div class="text-muted small text-decoration-line-through">${rsFormatINR(p.oldPrice)}</div>` : ''}
+        </td>
+        <td>
+          ${p.discount ? `<span class="badge bg-danger">-${p.discount}%</span>` : '<span class="text-muted small">—</span>'}
+        </td>
+        <td>
+          <span class="small fw-semibold">${(function(){ var r = rsGetProductRatingInfo(p.id); return r.rating; })()} <i class="bi bi-star-fill text-warning"></i></span>
+          <div class="text-muted" style="font-size:0.72rem;">(${(function(){ var r = rsGetProductRatingInfo(p.id); return r.count; })()} reviews)</div>
+        </td>
+        <td>
+          <button class="admin-btn-sm me-1" onclick="openProductModal('${p.id}')" title="Edit Product"><i class="bi bi-pencil"></i> Edit</button>
+          <button class="admin-btn-sm danger" onclick="deleteProductConfirm('${p.id}')" title="Delete Product"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>`).join('');
+  }
+
+  // ---------- ADD / EDIT PRODUCT MODAL ----------
+  function openProductModal(id){
+    populateCategoryDropdowns();
+    const form = document.getElementById('productForm');
+    form.reset();
+    document.getElementById('pImageFile').value = '';
+
+    if(id){
+      // Edit mode
+      const p = rsFindProduct(id);
+      if(!p) return;
+      document.getElementById('productModalTitle').textContent = "Edit Product: " + p.name;
+      document.getElementById('saveProductBtn').textContent = "Update Product";
+      document.getElementById('pId').value = p.id;
+      document.getElementById('pName').value = p.name || '';
+      document.getElementById('pBrand').value = p.brand || '';
+      document.getElementById('pCategory').value = p.category || '';
+      document.getElementById('pPrice').value = p.price || '';
+      document.getElementById('pOldPrice').value = p.oldPrice || '';
+      document.getElementById('pDiscount').value = p.discount || '';
+      document.getElementById('pImage').value = p.image || '';
+      document.getElementById('pDesc').value = p.desc || '';
+    } else {
+      // Add mode
+      document.getElementById('productModalTitle').textContent = "Add New Product";
+      document.getElementById('saveProductBtn').textContent = "Save Product";
+      document.getElementById('pId').value = '';
+      document.getElementById('pBrand').value = "Radiant Skin";
+    }
+
+    updateImagePreview();
+    pModal.show();
+  }
+
+  function handleImageUpload(input){
+    if(input.files && input.files[0]){
+      const reader = new FileReader();
+      reader.onload = function(e){
+        document.getElementById('pImage').value = e.target.result;
+        updateImagePreview();
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function updateImagePreview(){
+    const src = document.getElementById('pImage').value.trim();
+    const cat = document.getElementById('pCategory').value || 'serum';
+    const box = document.getElementById('imagePreviewBox');
+
+    if(src){
+      box.innerHTML = `<img src="${src}" alt="Preview" onerror="this.outerHTML='<span class=\\'small text-danger p-1\\'>Broken URL</span>'">`;
+    } else {
+      box.innerHTML = rsProductSVG(cat, 1);
+    }
+  }
+
+  function saveProduct(e){
+    e.preventDefault();
+    const id = document.getElementById('pId').value;
+    const name = document.getElementById('pName').value.trim();
+    const brand = document.getElementById('pBrand').value.trim();
+    const category = document.getElementById('pCategory').value;
+    const price = Number(document.getElementById('pPrice').value);
+    const oldPrice = document.getElementById('pOldPrice').value ? Number(document.getElementById('pOldPrice').value) : null;
+    const discount = document.getElementById('pDiscount').value ? Number(document.getElementById('pDiscount').value) : 0;
+    const image = document.getElementById('pImage').value.trim();
+    const desc = document.getElementById('pDesc').value.trim();
+
+    const productData = {
+      name,
+      brand,
+      category,
+      price,
+      oldPrice,
+      discount,
+      image,
+      desc
+    };
+
+    if(id){
+      // Update existing
+      productData.id = id;
+      rsUpdateProduct(productData);
+      rsToast("Product updated successfully ✓", "success");
+    } else {
+      // Add new
+      rsAddProduct(productData);
+      rsToast("New product added to catalog ✓", "success");
+    }
+
+    pModal.hide();
+    render();
+  }
+
+  function deleteProductConfirm(id){
+    const p = rsFindProduct(id);
+    const name = p ? p.name : id;
+    if(confirm("Are you sure you want to permanently delete '" + name + "'?\nThis will remove it from the user store immediately.")){
+      rsDeleteProduct(id);
+      rsToast("Product deleted ✓", "danger");
+      render();
+    }
+  }
+
+  // ---------- CATEGORY MANAGEMENT ----------
+  function openCategoryModal(){
+    renderCategoryList();
+    cModal.show();
+  }
+
+  function renderCategoryList(){
+    const cats = rsGetCategories();
+    const container = document.getElementById('categoryListContainer');
+    const keys = Object.keys(cats);
+
+    if(!keys.length){
+      container.innerHTML = '<p class="text-muted small">No categories.</p>';
+      return;
+    }
+
+    container.innerHTML = keys.map(k => `
+      <div class="cat-badge-item">
+        <div class="d-flex align-items-center gap-2">
+          <span style="width:18px;height:18px;border-radius:4px;background:${cats[k].color};border:1px solid ${cats[k].accent};"></span>
+          <div>
+            <strong>${cats[k].label}</strong>
+            <span class="text-muted small ms-1">(${k})</span>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-link text-danger p-0" onclick="deleteCategoryConfirm('${k}')" title="Delete Category"><i class="bi bi-trash"></i></button>
+      </div>
+    `).join('');
+  }
+
+  function saveCategory(e){
+    e.preventDefault();
+    const key = document.getElementById('catKey').value.trim().toLowerCase();
+    const label = document.getElementById('catLabel').value.trim();
+    const color = document.getElementById('catColor').value;
+    const accent = document.getElementById('catAccent').value;
+    const shape = document.getElementById('catShape').value;
+
+    rsAddCategory(key, { label, color, accent, shape });
+    rsToast("Category '" + label + "' added ✓", "success");
+    document.getElementById('categoryForm').reset();
+    renderCategoryList();
+    populateCategoryDropdowns();
+    render();
+  }
+
+  function deleteCategoryConfirm(key){
+    const cats = rsGetCategories();
+    const label = cats[key] ? cats[key].label : key;
+    if(confirm("Delete category '" + label + "'?\nProducts in this category will still remain but their category filter may change.")){
+      rsDeleteCategory(key);
+      rsToast("Category removed.", "info");
+      renderCategoryList();
+      populateCategoryDropdowns();
+      render();
+    }
+  }
+
+  function resetDefaults(){
+    if(confirm("Reset all products and categories back to original defaults? (All your custom additions will be cleared)")){
+      rsResetToDefaultProducts();
+      rsToast("Catalog reset to default 60 products ✓", "info");
+      render();
+    }
+  }
+
+  document.getElementById('productSearch').addEventListener('input', render);
+  document.getElementById('categoryFilter').addEventListener('change', render);
+</script>
+</body>
+</html>

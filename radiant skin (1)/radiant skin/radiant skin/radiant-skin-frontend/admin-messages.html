@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Messages | Radiant Skin Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/admin.css" rel="stylesheet">
+<script src="js/main.js"></script>
+<script>
+  if (!rsIsAdminLoggedIn()) {
+    window.location.replace("admin-login.html");
+  }
+</script>
+</head>
+<body class="admin-body">
+
+<div class="admin-shell">
+  <div id="rs-admin-sidebar"></div>
+
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <h2>Customer Inquiries & Messages</h2>
+        <span class="text-muted small" id="msgCount">Loading inquiries...</span>
+      </div>
+      <div class="d-flex gap-2">
+        <select class="form-select form-select-sm w-auto" id="msgFilter" onchange="renderMessages()">
+          <option value="all">All Messages</option>
+          <option value="Unread">Unread Only</option>
+          <option value="Read">Read</option>
+          <option value="Replied">Replied</option>
+        </select>
+        <button class="btn btn-sm btn-outline-secondary" onclick="fetchMessages()"><i class="bi bi-arrow-clockwise me-1"></i> Refresh</button>
+      </div>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="admin-stat-card">
+          <div class="label"><i class="bi bi-inbox me-1"></i> Total Inquiries</div>
+          <div class="value" id="statTotalMsg">0</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="admin-stat-card">
+          <div class="label text-danger"><i class="bi bi-envelope-exclamation me-1"></i> Unread Messages</div>
+          <div class="value text-danger" id="statUnreadMsg">0</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="admin-stat-card">
+          <div class="label text-success"><i class="bi bi-check-circle me-1"></i> Replied / Resolved</div>
+          <div class="value text-success" id="statRepliedMsg">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <div style="overflow-x:auto;">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Customer</th>
+              <th>Subject</th>
+              <th>Message</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th style="width:140px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="messagesBody"></tbody>
+        </table>
+      </div>
+      <p class="text-muted small mt-3 mb-0 text-center py-4" id="noMsgAlert" style="display:none;">No customer inquiries received yet.</p>
+    </div>
+  </main>
+</div>
+
+<!-- View Message Modal -->
+<div class="modal fade" id="viewMsgModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:18px; border:none; box-shadow:0 15px 40px rgba(0,0,0,0.15);">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="modalMsgSubject">Message Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body pt-3">
+        <div class="mb-3 p-3 rounded-3" style="background:#F7F4F0;">
+          <div class="fw-semibold" id="modalMsgSender">—</div>
+          <div class="small text-muted" id="modalMsgEmail">—</div>
+          <div class="small text-muted" id="modalMsgDate">—</div>
+        </div>
+        <h6 class="fw-bold mb-2">Message:</h6>
+        <p class="text-secondary small p-3 border rounded-3 bg-white" id="modalMsgBody" style="white-space:pre-line; min-height:100px;"></p>
+        
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+          <div>
+            <label class="small text-muted fw-semibold me-2">Status:</label>
+            <select class="form-select form-select-sm d-inline-block w-auto" id="modalStatusSelect">
+              <option value="Unread">Unread</option>
+              <option value="Read">Read</option>
+              <option value="Replied">Replied</option>
+            </select>
+          </div>
+          <div class="d-flex gap-2">
+            <a href="#" id="modalReplyBtn" class="btn btn-sm btn-outline-primary" target="_blank"><i class="bi bi-reply-fill me-1"></i> Send Email</a>
+            <button type="button" class="btn btn-sm btn-dark" onclick="saveModalStatus()">Save Status</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/admin.js"></script>
+<script>
+  rsMountAdmin("messages");
+
+  let allMessages = [];
+  let currentActiveMsgId = null;
+  const msgModal = new bootstrap.Modal(document.getElementById('viewMsgModal'));
+
+  async function fetchMessages(){
+    try {
+      const res = await fetch("http://localhost:8080/api/contact");
+      if(res.ok){
+        allMessages = await res.json();
+      } else {
+        allMessages = rsGet("rs_contact_messages", []);
+      }
+    } catch(e) {
+      allMessages = rsGet("rs_contact_messages", []);
+    }
+    renderMessages();
+  }
+
+  function renderMessages(){
+    const filter = document.getElementById('msgFilter').value;
+    let list = allMessages.slice();
+    
+    // Stats calculation
+    const total = allMessages.length;
+    const unread = allMessages.filter(m => (m.status || 'Unread') === 'Unread').length;
+    const replied = allMessages.filter(m => m.status === 'Replied').length;
+
+    document.getElementById('statTotalMsg').textContent = total;
+    document.getElementById('statUnreadMsg').textContent = unread;
+    document.getElementById('statRepliedMsg').textContent = replied;
+    document.getElementById('msgCount').textContent = total + ' inquiries total (' + unread + ' unread)';
+
+    if(filter !== 'all'){
+      list = list.filter(m => (m.status || 'Unread') === filter);
+    }
+
+    document.getElementById('noMsgAlert').style.display = list.length ? 'none' : 'block';
+
+    const statusBadges = {
+      'Unread': '<span class="badge bg-danger text-white">Unread</span>',
+      'Read': '<span class="badge bg-secondary text-white">Read</span>',
+      'Replied': '<span class="badge bg-success text-white">Replied</span>'
+    };
+
+    document.getElementById('messagesBody').innerHTML = list.map((m, i) => {
+      const s = m.status || 'Unread';
+      const dateStr = m.created_at ? new Date(m.created_at).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : 'Recent';
+      const shortBody = (m.message && m.message.length > 50) ? m.message.substring(0, 50) + '...' : (m.message || '—');
+
+      return `
+      <tr style="${s==='Unread' ? 'background:rgba(235,100,120,0.04); font-weight:500;' : ''}">
+        <td>${i+1}</td>
+        <td>
+          <div class="fw-semibold">${m.name || 'Anonymous'}</div>
+          <div class="small text-muted">${m.email || '—'}</div>
+        </td>
+        <td><span class="badge rounded-pill bg-light text-dark border">${m.subject || 'General'}</span></td>
+        <td class="small text-muted" style="max-width:260px;">${shortBody}</td>
+        <td class="small text-muted">${dateStr}</td>
+        <td>${statusBadges[s] || statusBadges['Unread']}</td>
+        <td>
+          <button class="btn btn-sm btn-outline-dark me-1" onclick="openMsgModal(${m.id})" title="View Details"><i class="bi bi-eye"></i></button>
+          <a href="mailto:${m.email}?subject=Regarding your inquiry: ${encodeURIComponent(m.subject||'Radiant Skin')}" class="btn btn-sm btn-outline-primary me-1" title="Reply via Email"><i class="bi bi-reply"></i></a>
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteMessage(${m.id})" title="Delete"><i class="bi bi-trash"></i></button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  function openMsgModal(id){
+    const msg = allMessages.find(m => m.id === id);
+    if(!msg) return;
+    currentActiveMsgId = id;
+    document.getElementById('modalMsgSubject').textContent = msg.subject || 'Customer Inquiry';
+    document.getElementById('modalMsgSender').textContent = msg.name || 'Customer';
+    document.getElementById('modalMsgEmail').textContent = msg.email || '';
+    document.getElementById('modalMsgDate').textContent = msg.created_at ? new Date(msg.created_at).toLocaleString('en-IN') : 'Recent';
+    document.getElementById('modalMsgBody').textContent = msg.message || 'No message text provided.';
+    document.getElementById('modalStatusSelect').value = msg.status || 'Unread';
+    document.getElementById('modalReplyBtn').href = `mailto:${msg.email}?subject=Regarding your inquiry: ${encodeURIComponent(msg.subject||'Radiant Skin')}`;
+
+    // Auto mark as Read if currently Unread
+    if(!msg.status || msg.status === 'Unread'){
+      updateMsgStatus(id, 'Read', false);
+      document.getElementById('modalStatusSelect').value = 'Read';
+    }
+
+    msgModal.show();
+  }
+
+  async function saveModalStatus(){
+    if(!currentActiveMsgId) return;
+    const newStatus = document.getElementById('modalStatusSelect').value;
+    await updateMsgStatus(currentActiveMsgId, newStatus, true);
+    msgModal.hide();
+  }
+
+  async function updateMsgStatus(id, newStatus, showToast){
+    const msg = allMessages.find(m => m.id === id);
+    if(msg) msg.status = newStatus;
+    renderMessages();
+
+    try {
+      await fetch("http://localhost:8080/api/contact", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id, status: newStatus })
+      });
+      if(showToast) rsToast("Status updated to " + newStatus + " ✓", "success");
+    } catch(e) {
+      console.warn("Offline status update:", e);
+    }
+  }
+
+  async function deleteMessage(id){
+    if(!confirm("Are you sure you want to delete this message?")) return;
+    allMessages = allMessages.filter(m => m.id !== id);
+    renderMessages();
+
+    try {
+      await fetch(`http://localhost:8080/api/contact?id=${id}`, { method: "DELETE" });
+      rsToast("Message deleted ✓", "info");
+    } catch(e){
+      console.warn("Offline delete:", e);
+    }
+  }
+
+  fetchMessages();
+</script>
+</body>
+</html>

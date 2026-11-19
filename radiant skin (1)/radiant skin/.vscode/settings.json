@@ -1,0 +1,6 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "radiant skin/radiant-skin-frontend/radiant-skin-backend/lib/javax.servlet-api-4.0.1.jar"
+    ]
+}

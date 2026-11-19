@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thank You for Your Order | Radiant Skin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+<style>
+  .track-stepper {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin: 30px 0 15px;
+  }
+  .track-stepper::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 40px;
+    right: 40px;
+    height: 3px;
+    background: var(--border, #E8DFD8);
+    z-index: 1;
+  }
+  .track-progress-bar {
+    position: absolute;
+    top: 24px;
+    left: 40px;
+    height: 3px;
+    background: #4E8A7A;
+    z-index: 1;
+    transition: width 0.4s ease;
+  }
+  .track-step {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    flex: 1;
+  }
+  .track-step-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #fff;
+    border: 3px solid var(--border, #E8DFD8);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: var(--text-muted, #7A6064);
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+  }
+  .track-step.completed .track-step-circle {
+    background: #4E8A7A;
+    border-color: #4E8A7A;
+    color: #fff;
+  }
+  .track-step.active .track-step-circle {
+    background: #fff;
+    border-color: #4E8A7A;
+    color: #4E8A7A;
+    box-shadow: 0 0 0 5px rgba(78, 138, 122, 0.2);
+  }
+  .track-step-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--primary-dark, #2B1E20);
+    margin-bottom: 2px;
+  }
+  .track-step-desc {
+    font-size: 0.76rem;
+    color: var(--text-muted, #7A6064);
+  }
+  @media (max-width: 600px) {
+    .track-step-title { font-size: 0.78rem; }
+    .track-step-desc { display: none; }
+    .track-step-circle { width: 38px; height: 38px; font-size: 0.95rem; }
+    .track-stepper::before, .track-progress-bar { top: 19px; left: 20px; right: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="rs-navbar"></div>
+
+<section class="container pt-5 pb-5" id="rsConfirmRoot"></section>
+
+<div id="rs-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/partials.js"></script>
+<script>
+  rsMountPartials("");
+  const params = new URLSearchParams(window.location.search);
+  const orderId = Number(params.get('id'));
+  const orders = rsGet("rs_orders", []);
+  const order = orders.find(o => o.id === orderId);
+
+  const statusClass = {
+    "Processing": "status-processing",
+    "Shipped": "status-shipped",
+    "Delivered": "status-delivered",
+    "Cancelled": "status-cancelled"
+  };
+
+  if(!order){
+    document.getElementById('rsConfirmRoot').innerHTML = `
+      <div class="text-center py-5">
+        <i class="bi bi-question-circle fs-1 text-muted"></i>
+        <p class="text-muted mt-2">We couldn't find that order.</p>
+        <a href="shop.html" class="btn-radiant btn">Continue Shopping</a>
+      </div>`;
+  } else {
+    const currentStatus = order.status || "Processing";
+
+    // Progress bar width & active step index
+    let progressWidth = "0%";
+    let sPlaced = "completed", sProc = "", sShip = "", sDeliv = "";
+
+    if (currentStatus === "Processing") {
+      progressWidth = "33%";
+      sProc = "active";
+    } else if (currentStatus === "Shipped") {
+      progressWidth = "66%";
+      sProc = "completed";
+      sShip = "active";
+    } else if (currentStatus === "Delivered") {
+      progressWidth = "100%";
+      sProc = "completed";
+      sShip = "completed";
+      sDeliv = "completed";
+    }
+
+    const itemsHtml = order.items.map(i => {
+      const p = rsFindProduct(i.id) || { name: "Product", price: 0, category: "serum" };
+      return `<div class="d-flex align-items-center gap-3 mb-3">
+        <div style="width:60px;height:60px;background:${RS_CATEGORIES[p.category] ? RS_CATEGORIES[p.category].color : '#f0f0f0'};border-radius:10px;overflow:hidden;">${rsProductImage(p)}</div>
+        <div class="flex-grow-1">
+          <div class="fw-medium small">${p.name}</div>
+          <div class="text-muted small">Qty: ${i.qty}</div>
+        </div>
+        <div class="small fw-medium">${rsFormatINR(p.price * i.qty)}</div>
+      </div>`;
+    }).join('');
+
+    const trackerHtml = currentStatus === "Cancelled" ? `
+      <div class="alert alert-danger d-flex align-items-center p-3 rounded-4 mb-4" style="background:#FBE3E5; border:1px solid #E8B4B8;">
+        <i class="bi bi-x-circle-fill fs-3 text-danger me-3"></i>
+        <div>
+          <h6 class="mb-1 text-danger fw-bold">This Order Has Been Cancelled</h6>
+          <p class="mb-0 small text-muted">Order #RS-${order.id} is cancelled. If you need any assistance, please reach out to customer support.</p>
+        </div>
+      </div>
+    ` : `
+      <div class="rs-card p-4 mb-4" id="orderTrackingSection">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="bi bi-truck me-2" style="color:var(--primary);"></i>Order Status Tracker</h5>
+          <span class="status-badge ${statusClass[currentStatus]}">${currentStatus}</span>
+        </div>
+
+        <div class="track-stepper">
+          <div class="track-progress-bar" style="width:${progressWidth};"></div>
+
+          <div class="track-step ${sPlaced}">
+            <div class="track-step-circle"><i class="bi bi-receipt"></i></div>
+            <div class="track-step-title">Order Placed</div>
+            <div class="track-step-desc">Received & confirmed</div>
+          </div>
+
+          <div class="track-step ${sProc}">
+            <div class="track-step-circle"><i class="bi bi-box-seam"></i></div>
+            <div class="track-step-title">Processing</div>
+            <div class="track-step-desc">Packed & quality checked</div>
+          </div>
+
+          <div class="track-step ${sShip}">
+            <div class="track-step-circle"><i class="bi bi-truck"></i></div>
+            <div class="track-step-title">Shipped</div>
+            <div class="track-step-desc">In transit to destination</div>
+          </div>
+
+          <div class="track-step ${sDeliv}">
+            <div class="track-step-circle"><i class="bi bi-house-check"></i></div>
+            <div class="track-step-title">Delivered</div>
+            <div class="track-step-desc">Package arrived</div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById('rsConfirmRoot').innerHTML = `
+      <div class="text-center mb-5">
+        <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:80px;height:80px;border-radius:50%;background:var(--blush);">
+          <i class="bi bi-check-lg fs-1" style="color:var(--primary);"></i>
+        </div>
+        <h1 class="display-6">Your skin is on its way to <span class="italic-accent">radiance.</span></h1>
+        <p class="text-muted">Thank you for shopping with Radiant Skin. We are preparing your order with care.</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+          <a href="#orderTrackingSection" class="btn-radiant btn" onclick="document.getElementById('orderTrackingSection').scrollIntoView({behavior:'smooth'}); return false;">
+            <i class="bi bi-geo-alt me-1"></i> Track Order
+          </a>
+          <a href="shop.html" class="btn-outline-radiant btn">Continue Shopping</a>
+          ${currentStatus === 'Processing' ? `
+            <button class="btn btn-outline-danger" onclick="cancelCurrentOrder(${order.id})">
+              <i class="bi bi-x-circle me-1"></i> Cancel Order
+            </button>
+          ` : ''}
+        </div>
+      </div>
+
+      ${trackerHtml}
+
+      <div class="row g-4 justify-content-center">
+        <div class="col-lg-6">
+          <div class="rs-card p-4 mb-3 h-100">
+            <div class="d-flex justify-content-between text-muted small mb-3">
+              <span>Order #RS-${order.id}</span><span>${order.date}</span>
+            </div>
+            ${itemsHtml}
+            <hr>
+            <div class="d-flex justify-content-between fw-semibold"><span>Total</span><span>${rsFormatINR(order.total)}</span></div>
+            <div class="text-muted small mt-2"><i class="bi bi-cash-coin me-1"></i>Payment: Cash on Delivery</div>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="rs-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0">Shipping To</h6>
+              <span class="status-badge ${statusClass[currentStatus]}">${currentStatus}</span>
+            </div>
+            <p class="mb-1 fw-medium">${order.shipping ? order.shipping.name : 'Customer'}</p>
+            <p class="mb-1 text-muted small">${order.shipping ? order.shipping.address : ''}</p>
+            <p class="mb-1 text-muted small">${order.shipping ? (order.shipping.city + ', ' + (order.shipping.state || 'Gujarat') + ' - ' + (order.shipping.pin || '')) : ''}</p>
+            <p class="mb-0 text-muted small"><i class="bi bi-telephone me-1"></i>${order.shipping ? order.shipping.phone : ''}</p>
+            <hr>
+            <div class="small text-muted">
+              <i class="bi bi-info-circle me-1"></i> Estimated delivery within 3-5 business days.
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  async function cancelCurrentOrder(orderId) {
+    if(!confirm("Are you sure you want to cancel this order?")) return;
+
+    const allOrders = rsGet("rs_orders", []);
+    const o = allOrders.find(x => x.id === orderId);
+    if(o){
+      o.status = "Cancelled";
+      rsSet("rs_orders", allOrders);
+    }
+
+    try {
+      await fetch("http://localhost:8080/api/orders", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: orderId,
+          order_number: (o && o.orderNumber) || ("ORD-" + orderId),
+          status: "Cancelled"
+        })
+      });
+    } catch(err) {
+      console.warn("Backend offline:", err);
+    }
+
+    rsToast("Order has been cancelled.", "info");
+    setTimeout(() => window.location.reload(), 500);
+  }
+
+  // Sync latest order status from DB
+  async function syncCurrentOrderStatus() {
+    if(!orderId) return;
+    try {
+      const res = await fetch("http://localhost:8080/api/orders");
+      if(res.ok) {
+        const dbOrders = await res.json();
+        const dbo = dbOrders.find(d => d.id === orderId || d.number === ("ORD-" + orderId));
+        if(dbo && dbo.status && dbo.status !== (order ? order.status : '')) {
+          const all = rsGet("rs_orders", []);
+          const matched = all.find(x => x.id === orderId);
+          if(matched) {
+            matched.status = dbo.status;
+            rsSet("rs_orders", all);
+            window.location.reload();
+          }
+        }
+      }
+    } catch(e){}
+  }
+  syncCurrentOrderStatus();
+</script>
+</body>
+</html>

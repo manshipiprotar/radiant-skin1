@@ -1,0 +1,9 @@
+{
+    "java.project.sourcePaths": [
+        "radiant-skin-frontend/radiant-skin-backend/src"
+    ],
+    "java.project.referencedLibraries": [
+        "radiant-skin-frontend/radiant-skin-backend/lib/*.jar",
+        "C:/Program Files/Apache Software Foundation/Tomcat 9.0/lib/servlet-api.jar"
+    ]
+}

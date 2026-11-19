@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radiant Skin | Natural Skincare & Beauty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/style.css" rel="stylesheet">
+<style>
+  .hero-slide { display:none; position:relative; align-items:center; min-height:440px; background-repeat:no-repeat; }
+  .hero-slide.active { display:flex; }
+  .hero-overlay {
+    position:absolute; inset:0; z-index:1;
+    background:linear-gradient(90deg, rgba(30,20,22,.62) 0%, rgba(30,20,22,.30) 50%, rgba(30,20,22,0) 85%);
+  }
+  .hero-slide .eyebrow { color:#fff; background:rgba(255,255,255,.18); padding:4px 12px; border-radius:999px; display:inline-block; }
+  .hero-slide h1 { color:#fff; }
+  .hero-slide h1 .italic-accent { color:#F3D9DC; }
+  .hero-slide p { color:rgba(255,255,255,.88); }
+  .hero-dots { position:absolute; bottom:22px; left:50%; transform:translateX(-50%); display:flex; gap:9px; z-index:3; }
+  .hero-dots button { width:9px; height:9px; border-radius:50%; border:none; background:rgba(255,255,255,.5); cursor:pointer; padding:0; transition:all .25s; }
+  .hero-dots button.active { background:#fff; width:24px; border-radius:5px; }
+</style>
+</head>
+<body>
+
+<div id="rs-navbar"></div>
+
+<!-- ================= HERO SLIDER ================= -->
+<section class="container pt-4">
+  <div class="hero-slider shadow-sm" id="rsHero">
+
+    <div class="hero-slide active" id="heroBg1" style="background-size:cover; background-position:center;">
+      <div class="hero-overlay"></div>
+      <div class="row g-0 w-100 align-items-center" style="position:relative; z-index:2;">
+        <div class="col-lg-6 p-5">
+          <span class="eyebrow">New Botanical Edit</span>
+          <h1 class="display-5 mt-2 mb-3">Illumination from <span class="italic-accent">within</span>.</h1>
+          <p class="mb-4" style="max-width:420px;">Discover our best-selling serums crafted with cold-pressed botanicals for radiant, healthy-looking skin.</p>
+          <a href="shop.html" class="btn btn-radiant">Shop Serums</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-slide" id="heroBg2" style="background-size:cover; background-position:center;">
+      <div class="hero-overlay"></div>
+      <div class="row g-0 w-100 align-items-center" style="position:relative; z-index:2;">
+        <div class="col-lg-6 p-5">
+          <span class="eyebrow">Night Ritual</span>
+          <h1 class="display-5 mt-2 mb-3">Renew while you <span class="italic-accent">rest</span>.</h1>
+          <p class="mb-4" style="max-width:420px;">Our night creams work with your skin's natural repair cycle for a luminous morning glow.</p>
+          <a href="shop.html?cat=nightcream" class="btn btn-radiant">Shop Night Cream</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-slide" id="heroBg3" style="background-size:cover; background-position:center;">
+      <div class="hero-overlay"></div>
+      <div class="row g-0 w-100 align-items-center" style="position:relative; z-index:2;">
+        <div class="col-lg-6 p-5">
+          <span class="eyebrow">Everyday Protection</span>
+          <h1 class="display-5 mt-2 mb-3">Shield your skin, <span class="italic-accent">daily</span>.</h1>
+          <p class="mb-4" style="max-width:420px;">Lightweight sunscreens that protect without leaving a trace — for every skin tone.</p>
+          <a href="shop.html?cat=sunscreen" class="btn btn-radiant">Shop Sunscreen</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-dots">
+      <button class="active"></button><button></button><button></button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FEATURED CATEGORIES ================= -->
+<section class="rs-section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">Explore</span>
+      <h2 class="section-title mt-2">Targeted solutions for every skin journey</h2>
+    </div>
+    <div class="row g-4" id="rsFeaturedCategories"></div>
+  </div>
+</section>
+
+<!-- ================= BEST SELLING ================= -->
+<section class="rs-section rs-section-sm" style="background:var(--cream-soft);">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <span class="eyebrow">Best Sellers</span>
+        <h2 class="section-title mt-2 mb-0">Best-selling rituals</h2>
+      </div>
+      <a href="shop.html" class="btn-outline-radiant btn d-none d-md-inline-block">View All Products</a>
+    </div>
+    <div class="row g-4" id="rsBestSelling"></div>
+  </div>
+</section>
+
+<!-- ================= NEW ARRIVALS ================= -->
+<section class="rs-section">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-4">
+        <span class="eyebrow">Just Landed</span>
+        <h2 class="section-title mt-2">New Arrivals</h2>
+        <p class="text-muted">Fresh botanical formulas, straight from our lab to your shelf. Meet the newest additions to the Radiant Skin family.</p>
+        <a href="shop.html" class="btn-radiant btn">Explore New In</a>
+      </div>
+      <div class="col-lg-8">
+        <div class="row g-4" id="rsNewArrivals"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SPECIAL OFFERS ================= -->
+<section class="rs-section rs-section-sm">
+  <div class="container">
+    <div class="rs-card p-4 p-md-5" style="background:linear-gradient(120deg,var(--peach),var(--blush)); border:none;">
+      <div class="row align-items-center g-4">
+        <div class="col-md-7">
+          <span class="eyebrow">Limited Time</span>
+          <h2 class="section-title mt-2 mb-2">Special Offers up to 25% off</h2>
+          <p class="text-muted mb-0">Save on selected serums, toners and creams this week only. Discounts applied automatically at checkout.</p>
+        </div>
+        <div class="col-md-5 text-md-end">
+          <a href="shop.html" class="btn-radiant btn">Shop the Sale</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WHY CHOOSE US ================= -->
+<section class="rs-section" style="background:var(--cream-soft);">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">Our Promise</span>
+      <h2 class="section-title mt-2">Why Choose Radiant Skin</h2>
+    </div>
+    <div class="row g-4 text-center">
+      <div class="col-md-3 col-6">
+        <svg class="divider-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 2C9 5 6 9 6 13a6 6 0 0012 0c0-4-3-8-6-11z"/></svg>
+        <h5>Clean Botanicals</h5>
+        <p class="text-muted small">Sustainably sourced ingredients, free from harsh chemicals.</p>
+      </div>
+      <div class="col-md-3 col-6">
+        <svg class="divider-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 12l3 3 5-6"/></svg>
+        <h5>Dermatologist Tested</h5>
+        <p class="text-muted small">Every formula is tested for safety and gentleness.</p>
+      </div>
+      <div class="col-md-3 col-6">
+        <svg class="divider-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 12l7-9 11 9-11 9z"/></svg>
+        <h5>Sustainable Packaging</h5>
+        <p class="text-muted small">Recyclable glass and minimal, mindful packaging.</p>
+      </div>
+      <div class="col-md-3 col-6">
+        <svg class="divider-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="9"/></svg>
+        <h5>Cash on Delivery</h5>
+        <p class="text-muted small">Shop with ease — pay only when your order arrives.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TESTIMONIALS ================= -->
+<section class="rs-section">
+  <div class="container">
+    <div class="text-center mb-5">
+      <span class="eyebrow">Community Praise</span>
+      <h2 class="section-title mt-2">Loved by our customers</h2>
+    </div>
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <div class="stars mb-2">★★★★★</div>
+          <p class="text-muted">"My skin has never felt this soft and even-toned. The night cream is now a permanent part of my routine."</p>
+          <div class="fw-semibold mt-3">— Priya M.</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <div class="stars mb-2">★★★★★</div>
+          <p class="text-muted">"Lightweight, non-greasy, and it actually calmed my breakouts within two weeks. Repurchasing for sure."</p>
+          <div class="fw-semibold mt-3">— Meera S.</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="testimonial-card">
+          <div class="stars mb-2">★★★★★</div>
+          <p class="text-muted">"Love that I can pay cash on delivery, and the packaging feels so premium for the price."</p>
+          <div class="fw-semibold mt-3">— Ananya K.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= NEWSLETTER ================= -->
+<section class="rs-section-sm">
+  <div class="container">
+    <div class="newsletter-band text-center">
+      <span class="eyebrow">Join the Inner Circle</span>
+      <h2 class="section-title mt-2">Radiant rituals, sustainable tips — in your inbox</h2>
+      <form class="row justify-content-center g-2 mt-3" style="max-width:480px; margin:0 auto;" onsubmit="rsToast('Thanks for subscribing!','success'); return false;">
+        <div class="col-8"><input type="email" class="form-control" placeholder="Enter your email address" required></div>
+        <div class="col-4"><button class="btn-radiant btn w-100" type="submit">Subscribe</button></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<div id="rs-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/products.js"></script>
+<script src="js/main.js"></script>
+<script src="js/partials.js"></script>
+<script>
+  rsMountPartials("home");
+  rsInitSlider("rsHero", 2000);
+
+  // Hero SVGs
+  document.getElementById('heroBg1').style.backgroundImage = "url('images/P061.jpg')";
+  document.getElementById('heroBg2').style.backgroundImage = "url('images/P062.jpg')";
+  document.getElementById('heroBg3').style.backgroundImage = "url('images/P063.jpg')";
+
+  function rsProductCard(p){
+    const rInfo = rsGetProductRatingInfo(p.id);
+    return `
+    <div class="col-lg-3 col-md-4 col-6">
+      <div class="product-card">
+        ${p.discount ? `<span class="discount-badge">-${p.discount}%</span>` : ''}
+        <button class="wishlist-toggle ${rsIsWishlisted(p.id)?'active':''}" onclick="event.preventDefault(); this.classList.toggle('active', rsToggleWishlist('${p.id}'));">
+          <i class="bi bi-heart${rsIsWishlisted(p.id)?'-fill':''}"></i>
+        </button>
+        <a href="product-details.html?id=${p.id}" class="text-decoration-none text-reset">
+          <div class="product-img-wrap">${rsProductImage(p)}</div>
+          <div class="p-body">
+            <div class="p-brand">${p.brand}</div>
+            <div class="p-name">${p.name}</div>
+            <div class="p-rating mb-2">${rsStars(rInfo.rating)} <span class="text-muted ms-1">${rInfo.rating} (${rInfo.count})</span></div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="p-price">${rsFormatINR(p.price)}${p.oldPrice ? `<span class="old">${rsFormatINR(p.oldPrice)}</span>` : ''}</div>
+            </div>
+          </div>
+        </a>
+        <div class="px-3 pb-3">
+          <button class="btn-radiant btn btn-sm w-100" onclick="rsAddToCartGated('${p.id}',1)"><i class="bi bi-bag-plus me-1"></i> Add to Cart</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function renderHome(){
+    const catIcons = { serum:'bi-droplet', cleanser:'bi-water', moisturizer:'bi-moisture', sunscreen:'bi-sun', nightcream:'bi-moon-stars', toner:'bi-flower1' };
+    const cats = rsGetCategories();
+    const catKeys = Object.keys(cats);
+    const catEl = document.getElementById('rsFeaturedCategories');
+    if (catEl) {
+      catEl.innerHTML = catKeys.map(key => {
+        const c = cats[key];
+        const icon = catIcons[key] || 'bi-stars';
+        return `<div class="col-lg-2 col-md-4 col-6">
+          <a href="shop.html?cat=${key}" class="rs-card d-block text-center p-4 text-decoration-none text-reset h-100">
+            <div class="mx-auto mb-3 d-flex align-items-center justify-content-center" style="width:64px;height:64px;border-radius:50%;background:${c.color || '#F4DCC4'};">
+              <i class="bi ${icon} fs-4" style="color:${c.accent || '#C97B4A'};"></i>
+            </div>
+            <div class="fw-medium small">${c.label || key}</div>
+          </a>
+        </div>`;
+      }).join('');
+    }
+
+    const prods = rsGetProducts();
+    const bestSelling = [...prods].sort((a,b)=> rsGetProductRatingInfo(b.id).rating - rsGetProductRatingInfo(a.id).rating).slice(0,10);
+    const bestEl = document.getElementById('rsBestSelling');
+    if (bestEl) bestEl.innerHTML = bestSelling.map(rsProductCard).join('');
+
+    const newArrivals = prods.slice(0,4);
+    const newEl = document.getElementById('rsNewArrivals');
+    if (newEl) newEl.innerHTML = newArrivals.map(rsProductCard).join('');
+  }
+
+  window.renderHome = renderHome;
+  renderHome();
+</script>
+</body>
+</html>

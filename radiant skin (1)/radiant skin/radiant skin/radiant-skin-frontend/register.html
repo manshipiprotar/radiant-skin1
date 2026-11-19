@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="refresh" content="0; url=login.html?tab=register">
+<title>Register | Radiant Skin</title>
+<link rel="canonical" href="login.html?tab=register">
+</head>
+<body>
+    <form action="RegisterServlet" method="post">
+
+<input type="text" name="name" placeholder="Full Name">
+<input type="email" name="email" placeholder="Email Address">
+<input type="text" name="phone" placeholder="Mobile Number">
+<input type="text" name="city" placeholder="City">
+<input type="password" name="password" placeholder="Password">
+
+<button type="submit">Register</button>
+
+</form>
+<p>Redirecting to <a href="login.html?tab=register">Login / Register</a>...</p>
+<script>window.location.replace("login.html?tab=register");</script>
+</body>
+</html>
